@@ -29,6 +29,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> _repos = [];
   int _page = 1; // Initial page number
   bool _isLoading = false;
+  String _loadingRepo = '';
 
   Future<void> _fetchGitHubRepos(String username, int page) async {
     setState(() {
@@ -123,7 +124,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _handleRepoTap(String username, String repoName) async {
+    setState(() {
+      _loadingRepo = repoName;
+    });
+
     var commitDetails = await _fetchLastCommit(username, repoName);
+
+    setState(() {
+      _loadingRepo = '';
+    });
+
     if (commitDetails.isNotEmpty) {
       // Show commit details in a dialog or navigate to a new screen
       showDialog(
@@ -189,9 +199,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     title: Text(_repos[index]['name']),
+                    trailing: _loadingRepo == _repos[index]['name']
+                        ? CircularProgressIndicator()
+                        : null,
                     onTap: () {
-                      _handleRepoTap(
-                          _usernameController.text, _repos[index]['name']);
+                      if (_loadingRepo.isEmpty) {
+                        _handleRepoTap(
+                            _usernameController.text, _repos[index]['name']);
+                      }
                     },
                   );
                 },
